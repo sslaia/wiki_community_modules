@@ -58,14 +58,14 @@ void main() {
 
     test('cleanWikimediaImageUrl normalizes protocol and thumbnail size', () {
       const raw = '//thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Pic.jpg/250px-Pic.jpg?utm_source=test';
-      final cleaned = cleanWikimediaImageUrl(raw, defaultWidth: 1000);
-      expect(cleaned, equals('https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Pic.jpg/1000px-Pic.jpg'));
+      final cleaned = cleanWikimediaImageUrl(raw, defaultWidth: 500);
+      expect(cleaned, equals('https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Pic.jpg/500px-Pic.jpg'));
     });
 
     test('extractHeroImageUrl extracts first non-icon image from HTML or images', () {
       const html = '<div><p>Text</p><img src="//upload.wikimedia.org/thumb/a/a1/Hero.jpg/300px-Hero.jpg"><p>More</p></div>';
       final hero = extractHeroImageUrl(html, []);
-      expect(hero, equals('https://upload.wikimedia.org/thumb/a/a1/Hero.jpg/1000px-Hero.jpg'));
+      expect(hero, equals('https://upload.wikimedia.org/thumb/a/a1/Hero.jpg/500px-Hero.jpg'));
 
       final fallback = extractHeroImageUrl('<p>No image</p>', ['CourseArt.png']);
       expect(fallback, contains('Special:FilePath/CourseArt.png'));

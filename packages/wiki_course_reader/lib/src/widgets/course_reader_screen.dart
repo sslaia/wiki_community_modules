@@ -164,6 +164,9 @@ class _CourseReaderScreenState extends State<CourseReaderScreen> {
             if (heroImage != null && heroImage.isNotEmpty)
               CachedNetworkImage(
                 imageUrl: heroImage,
+                httpHeaders: {
+                  'User-Agent': widget.config.userAgent,
+                },
                 fit: BoxFit.cover,
                 errorWidget: (context, url, error) =>
                     _buildFallbackHeroBackground(theme, accent),

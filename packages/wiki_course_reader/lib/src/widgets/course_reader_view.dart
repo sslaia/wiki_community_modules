@@ -278,7 +278,7 @@ class _CourseReaderViewState extends State<CourseReaderView> {
             if (element.localName == 'img') {
               final rawSrc = element.attributes['src'] ?? '';
               final alt = element.attributes['alt'] ?? '';
-              final src = cleanWikimediaImageUrl(rawSrc, defaultWidth: 1000);
+              final src = cleanWikimediaImageUrl(rawSrc, defaultWidth: 500);
               if (src.isEmpty) return const SizedBox.shrink();
 
               return Padding(
@@ -303,6 +303,9 @@ class _CourseReaderViewState extends State<CourseReaderView> {
                       ),
                       child: CachedNetworkImage(
                         imageUrl: src,
+                        httpHeaders: {
+                          'User-Agent': widget.config.userAgent,
+                        },
                         width: double.infinity,
                         fit: BoxFit.cover,
                         placeholder: (ctx, url) => Container(

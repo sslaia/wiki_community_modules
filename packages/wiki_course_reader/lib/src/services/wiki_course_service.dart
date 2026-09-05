@@ -6,7 +6,7 @@ import '../models/course_models.dart';
 /// 1. Prepends https: to protocol-relative URLs (//upload...)
 /// 2. Strips query parameters (e.g. ?utm_source=...)
 /// 3. Normalizes thumbnail widths to high-res width (e.g. 1000px)
-String cleanWikimediaImageUrl(String rawSrc, {int defaultWidth = 1000}) {
+String cleanWikimediaImageUrl(String rawSrc, {int defaultWidth = 500}) {
   var src = rawSrc.trim();
   if (src.isEmpty) return '';
 
@@ -55,7 +55,7 @@ String? extractHeroImageUrl(String htmlContent, List<String> images, {String? do
         lower.contains('icon')) {
       continue;
     }
-    final cleaned = cleanWikimediaImageUrl(rawSrc, defaultWidth: 1000);
+    final cleaned = cleanWikimediaImageUrl(rawSrc, defaultWidth: 500);
     if (cleaned.isNotEmpty) return cleaned;
   }
 
@@ -73,7 +73,7 @@ String? extractHeroImageUrl(String htmlContent, List<String> images, {String? do
         lower.endsWith('.jpeg') ||
         lower.endsWith('.png') ||
         lower.endsWith('.webp')) {
-      return 'https://commons.wikimedia.org/wiki/Special:FilePath/${Uri.encodeComponent(imgName)}?width=1000';
+      return 'https://commons.wikimedia.org/wiki/Special:FilePath/${Uri.encodeComponent(imgName)}?width=500';
     }
   }
 
