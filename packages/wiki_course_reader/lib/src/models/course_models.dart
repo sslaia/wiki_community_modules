@@ -99,3 +99,16 @@ class DefaultSharedPreferencesCourseCache implements CourseCacheDelegate {
     } catch (_) {}
   }
 }
+
+
+/// Abstract repository conforming to Modular Modules Specification Section 2.3.
+abstract class CourseRepository {
+  /// Fetches structured lesson HTML or markdown
+  Future<String> fetchLessonContent(String lessonId);
+
+  /// Checks if lesson is bookmarked
+  Future<bool> isBookmarked(String lessonId);
+
+  /// Toggles bookmark state
+  Future<void> toggleBookmark(String lessonId);
+}

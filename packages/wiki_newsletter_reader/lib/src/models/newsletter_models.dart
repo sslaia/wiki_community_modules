@@ -106,3 +106,11 @@ class DefaultSharedPreferencesNewsletterCache implements NewsletterCacheDelegate
     } catch (_) {}
   }
 }
+
+
+/// Abstract content delegate conforming to Modular Modules Specification Section 4.3.
+abstract class NewsletterContentDelegate {
+  Future<NewsletterEdition> fetchEdition(String editionId);
+  Future<NewsletterEdition?> loadOfflineEdition(String editionId);
+  Future<void> saveOfflineEdition(NewsletterEdition edition);
+}

@@ -181,3 +181,110 @@ class _CourseReaderViewState extends State<CourseReaderView> {
     );
   }
 }
+
+
+/// Decoupled component conforming to Modular Modules Specification Section 2.4.
+class CourseLessonView extends StatelessWidget {
+  final String lessonId;
+  final String lessonTitle;
+  final CourseRepository repository;
+  final void Function(String imageUrl, String? caption)? onImageTap;
+  final void Function(String audioUrl)? onPlayAudio;
+  final void Function(String url)? onLinkTap;
+  final Widget? headerWidget;
+  final Widget? footerWidget;
+
+  const CourseLessonView({
+    super.key,
+    required this.lessonId,
+    required this.lessonTitle,
+    required this.repository,
+    this.onImageTap,
+    this.onPlayAudio,
+    this.onLinkTap,
+    this.headerWidget,
+    this.footerWidget,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return FutureBuilder<String>(
+      future: repository.fetchLessonContent(lessonId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Failed to load lesson',
+                    style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.error),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    snapshot.error.toString(),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        final content = snapshot.data ?? '';
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (headerWidget != null) headerWidget!,
+              HtmlWidget(
+                content,
+                onTapUrl: (url) {
+                  if (url.endsWith('.wav') ||
+                      url.endsWith('.ogg') ||
+                      url.endsWith('.mp3')) {
+                    if (onPlayAudio != null) {
+                      onPlayAudio!(url);
+                      return true;
+                    }
+                  }
+                  if (onLinkTap != null) {
+                    onLinkTap!(url);
+                    return true;
+                  }
+                  return false;
+                },
+                onTapImage: (imageMetadata) {
+                  final url = imageMetadata.sources.firstOrNull?.url;
+                  if (url != null && onImageTap != null) {
+                    onImageTap!(url, imageMetadata.alt);
+                  }
+                },
+                textStyle: theme.textTheme.bodyMedium?.copyWith(height: 1.6),
+              ),
+              if (footerWidget != null) footerWidget!,
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
