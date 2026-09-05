@@ -1,5 +1,18 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:wiki_course_reader/wiki_course_reader.dart';
+
+class MockCourseCacheDelegate implements CourseCacheDelegate {
+  final Map<String, CoursePageContent> store = {};
+
+  @override
+  Future<CoursePageContent?> loadCached(String key) async => store[key];
+
+  @override
+  Future<void> saveCached(String key, CoursePageContent content) async {
+    store[key] = content;
+  }
+}
 
 void main() {
   group('CourseConfig and CoursePageContent tests', () {
@@ -41,6 +54,68 @@ void main() {
       expect(restored.htmlContent, equals('<p>Lala wamaheolu</p>'));
       expect(restored.images, contains('Image1.jpg'));
       expect(restored.isOfflineCache, isTrue);
+    });
+
+    test('cleanWikimediaImageUrl normalizes protocol and thumbnail size', () {
+      const raw = '//thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Pic.jpg/250px-Pic.jpg?utm_source=test';
+      final cleaned = cleanWikimediaImageUrl(raw, defaultWidth: 1000);
+      expect(cleaned, equals('https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Pic.jpg/1000px-Pic.jpg'));
+    });
+
+    test('extractHeroImageUrl extracts first non-icon image from HTML or images', () {
+      const html = '<div><p>Text</p><img src="//upload.wikimedia.org/thumb/a/a1/Hero.jpg/300px-Hero.jpg"><p>More</p></div>';
+      final hero = extractHeroImageUrl(html, []);
+      expect(hero, equals('https://upload.wikimedia.org/thumb/a/a1/Hero.jpg/1000px-Hero.jpg'));
+
+      final fallback = extractHeroImageUrl('<p>No image</p>', ['CourseArt.png']);
+      expect(fallback, contains('Special:FilePath/CourseArt.png'));
+    });
+  });
+
+  group('CourseReaderScreen widget tests', () {
+    testWidgets('Renders SliverAppBar, hero title, and floating action bar with Refresh and Share', (WidgetTester tester) async {
+      const config = CourseConfig(
+        langCode: 'nia',
+        project: 'wiktionary',
+        pageTitle: 'Wikikamus:Sulu',
+      );
+
+      final cache = MockCourseCacheDelegate();
+      await cache.saveCached(
+        config.cacheKey,
+        CoursePageContent(
+          pageTitle: 'Wikikamus:Sulu',
+          htmlContent: '<blockquote>Abu dödögu</blockquote><p>Paragraph text</p>',
+          images: [],
+          isOfflineCache: false,
+          lastFetched: DateTime.now(),
+        ),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: CourseReaderScreen(
+            config: config,
+            cacheDelegate: cache,
+            title: "Famaha'ö Li Niha",
+            subtitle: 'Wikikamus:Sulu',
+            accentColor: const Color(0xFFD97706),
+          ),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // Verify SliverAppBar and title
+      expect(find.byType(SliverAppBar), findsOneWidget);
+      expect(find.text("Famaha'ö Li Niha"), findsOneWidget);
+
+      // Verify Floating Action Bar with Refresh and Share buttons
+      expect(find.text('Refresh'), findsOneWidget);
+      expect(find.text('Share'), findsOneWidget);
+      expect(find.byIcon(Icons.refresh_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.share_rounded), findsOneWidget);
     });
   });
 }

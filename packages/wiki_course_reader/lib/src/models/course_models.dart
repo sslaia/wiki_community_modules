@@ -57,7 +57,10 @@ class CoursePageContent {
         'lastFetched': lastFetched.toIso8601String(),
       };
 
-  factory CoursePageContent.fromJson(Map<String, dynamic> json, {bool isOfflineCache = true}) {
+  factory CoursePageContent.fromJson(
+    Map<String, dynamic> json, {
+    bool isOfflineCache = false,
+  }) {
     return CoursePageContent(
       pageTitle: json['pageTitle'] as String? ?? '',
       htmlContent: json['htmlContent'] as String? ?? '',
@@ -66,6 +69,22 @@ class CoursePageContent {
       lastFetched: json['lastFetched'] != null
           ? DateTime.tryParse(json['lastFetched'] as String) ?? DateTime.now()
           : DateTime.now(),
+    );
+  }
+
+  CoursePageContent copyWith({
+    String? pageTitle,
+    String? htmlContent,
+    List<String>? images,
+    bool? isOfflineCache,
+    DateTime? lastFetched,
+  }) {
+    return CoursePageContent(
+      pageTitle: pageTitle ?? this.pageTitle,
+      htmlContent: htmlContent ?? this.htmlContent,
+      images: images ?? this.images,
+      isOfflineCache: isOfflineCache ?? this.isOfflineCache,
+      lastFetched: lastFetched ?? this.lastFetched,
     );
   }
 }
@@ -85,7 +104,7 @@ class DefaultSharedPreferencesCourseCache implements CourseCacheDelegate {
       final str = prefs.getString(key);
       if (str != null && str.isNotEmpty) {
         final data = jsonDecode(str) as Map<String, dynamic>;
-        return CoursePageContent.fromJson(data, isOfflineCache: true);
+        return CoursePageContent.fromJson(data, isOfflineCache: false);
       }
     } catch (_) {}
     return null;
@@ -99,7 +118,6 @@ class DefaultSharedPreferencesCourseCache implements CourseCacheDelegate {
     } catch (_) {}
   }
 }
-
 
 /// Abstract repository conforming to Modular Modules Specification Section 2.3.
 abstract class CourseRepository {

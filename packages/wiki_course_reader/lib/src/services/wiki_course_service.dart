@@ -2,24 +2,98 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/course_models.dart';
 
+/// Normalizes Wikimedia image URLs:
+/// 1. Prepends https: to protocol-relative URLs (//upload...)
+/// 2. Strips query parameters (e.g. ?utm_source=...)
+/// 3. Normalizes thumbnail widths to high-res width (e.g. 1000px)
+String cleanWikimediaImageUrl(String rawSrc, {int defaultWidth = 1000}) {
+  var src = rawSrc.trim();
+  if (src.isEmpty) return '';
+
+  if (src.startsWith('//')) {
+    src = 'https:$src';
+  }
+
+  // Strip query parameters
+  if (src.contains('?')) {
+    src = src.split('?').first;
+  }
+
+  // Replace &amp; with &
+  src = src.replaceAll('&amp;', '&');
+
+  // If thumbnail, scale to requested high-res width
+  if (src.contains('/thumb/')) {
+    final parts = src.split('/');
+    final last = parts.last;
+    final match = RegExp(r'^\d+px-(.+)').firstMatch(last);
+    if (match != null) {
+      final originalName = match.group(1)!;
+      parts.removeLast();
+      parts.add('${defaultWidth}px-$originalName');
+      src = parts.join('/');
+    }
+  }
+
+  return src;
+}
+
+/// Extracts the first article image URL suitable for hero display.
+String? extractHeroImageUrl(String htmlContent, List<String> images, {String? domain}) {
+  // 1. Check for <img> tags in HTML
+  final imgRegex = RegExp(r"""<img[^>]+src=["']([^"'>]+)["']""", caseSensitive: false);
+  final matches = imgRegex.allMatches(htmlContent);
+  for (final m in matches) {
+    final rawSrc = m.group(1)!;
+    final lower = rawSrc.toLowerCase();
+    if (lower.contains('gnome') ||
+        lower.contains('ambox') ||
+        lower.contains('question_book') ||
+        lower.contains('padlock') ||
+        lower.contains('wikimedia-button') ||
+        lower.contains('disambig') ||
+        lower.contains('icon')) {
+      continue;
+    }
+    final cleaned = cleanWikimediaImageUrl(rawSrc, defaultWidth: 1000);
+    if (cleaned.isNotEmpty) return cleaned;
+  }
+
+  // 2. Check images list if any
+  for (final imgName in images) {
+    final lower = imgName.toLowerCase();
+    if (lower.contains('gnome') ||
+        lower.contains('ambox') ||
+        lower.contains('padlock') ||
+        lower.contains('button') ||
+        lower.contains('icon')) {
+      continue;
+    }
+    if (lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.webp')) {
+      return 'https://commons.wikimedia.org/wiki/Special:FilePath/${Uri.encodeComponent(imgName)}?width=1000';
+    }
+  }
+
+  return null;
+}
+
 class WikiCourseService {
   static final CourseCacheDelegate _defaultCache = DefaultSharedPreferencesCourseCache();
 
-  /// Fetches the course page HTML from the specified Wikimedia or custom endpoint.
+  /// Fetches the course page HTML using a network-first strategy:
+  /// 1. Tries to fetch fresh content from the wiki network API.
+  /// 2. If network request succeeds, saves to cache and returns content with isOfflineCache = false.
+  /// 3. If network fails (timeout, socket error, offline), falls back to local cache if available and marks isOfflineCache = true.
+  /// 4. If forceRefresh is requested, throws on network error without falling back silently.
   static Future<CoursePageContent> fetchCourse(
     CourseConfig config, {
     bool forceRefresh = false,
     CourseCacheDelegate? cacheDelegate,
   }) async {
     final cache = cacheDelegate ?? _defaultCache;
-
-    // Check cache first if not force-refreshing
-    if (!forceRefresh) {
-      final cached = await cache.loadCached(config.cacheKey);
-      if (cached != null) {
-        return cached;
-      }
-    }
 
     final endpoint = Uri.parse(
       'https://${config.domain}/w/api.php?action=parse&page=${Uri.encodeComponent(config.pageTitle)}&format=json&prop=text|images&mobileformat=1&redirects=1',
@@ -33,7 +107,7 @@ class WikiCourseService {
           'Accept': 'application/json',
           if (forceRefresh) 'Cache-Control': 'no-cache',
         },
-      ).timeout(const Duration(seconds: 15));
+      ).timeout(const Duration(seconds: 8));
 
       if (response.statusCode == 200) {
         final decoded = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
@@ -52,7 +126,7 @@ class WikiCourseService {
             pageTitle: parse['title'] as String? ?? config.pageTitle,
             htmlContent: processedHtml,
             images: imagesList,
-            isOfflineCache: false,
+            isOfflineCache: false, // Network succeeded -> fresh online content
             lastFetched: DateTime.now(),
           );
 
@@ -62,10 +136,10 @@ class WikiCourseService {
       }
       throw Exception('Failed to load wiki page. HTTP ${response.statusCode}');
     } catch (e) {
-      // Fallback to cache on network failure
+      // Network failed or timed out: Fallback to cache if available
       final cached = await cache.loadCached(config.cacheKey);
       if (cached != null) {
-        return cached;
+        return cached.copyWith(isOfflineCache: true);
       }
       rethrow;
     }
