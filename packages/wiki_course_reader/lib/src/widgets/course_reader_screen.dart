@@ -137,7 +137,7 @@ class _CourseReaderScreenState extends State<CourseReaderScreen> {
       expandedHeight: 240.0,
       pinned: true,
       stretch: true,
-      backgroundColor: theme.colorScheme.surface,
+      backgroundColor: accent,
       surfaceTintColor: Colors.transparent,
       foregroundColor: Colors.white,
       actions: widget.customActions,
