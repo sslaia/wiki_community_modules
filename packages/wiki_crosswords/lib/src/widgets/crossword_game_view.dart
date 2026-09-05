@@ -751,10 +751,11 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
     Color primary,
   ) {
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Check Answers
           TextButton.icon(
@@ -769,6 +770,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
               color: _isChecking ? Colors.green : primary,
             ),
             label: Text(_label('check', 'Check')),
+            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), visualDensity: VisualDensity.compact),
           ),
 
           // Reveal Solution
@@ -784,6 +786,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
               color: primary,
             ),
             label: Text(_label('reveal', 'Reveal')),
+            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), visualDensity: VisualDensity.compact),
           ),
 
           // Clear Answers
@@ -812,6 +815,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
             },
             icon: const Icon(Icons.refresh_rounded, size: 18),
             label: Text(_label('clear', 'Clear')),
+            style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), visualDensity: VisualDensity.compact),
           ),
 
           // Share Score
@@ -823,6 +827,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
               },
               icon: Icon(Icons.share_rounded, size: 18, color: primary),
               label: Text(_label('share', 'Share')),
+              style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4), visualDensity: VisualDensity.compact),
             ),
         ],
       ),
