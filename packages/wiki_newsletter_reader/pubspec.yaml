@@ -1,0 +1,25 @@
+name: wiki_newsletter_reader
+description: A neutral, decoupled Flutter package for reading community bulletins, newsletters, and magazines from Wikimedia or custom wikis.
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  flutter_widget_from_html: ^0.17.0
+  shared_preferences: ^2.2.0
+  url_launcher: ^6.3.0
+  share_plus: '>=10.0.0 <14.0.0'
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
