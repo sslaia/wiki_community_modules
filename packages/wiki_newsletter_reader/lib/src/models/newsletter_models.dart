@@ -37,12 +37,44 @@ class NewsletterConfig {
   String get cacheKey => 'newsletter_cache_${domain}_${pageTitle.replaceAll(' ', '_')}';
 }
 
+/// Represents a parsed heading/section in the newsletter article.
+class NewsletterSectionItem {
+  final String id;
+  final String title;
+  final int level;
+
+  const NewsletterSectionItem({
+    required this.id,
+    required this.title,
+    this.level = 2,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'level': level,
+      };
+
+  factory NewsletterSectionItem.fromJson(Map<String, dynamic> json) {
+    final rawLevel = json['level'] ?? json['toclevel'];
+    final level = rawLevel is int
+        ? rawLevel
+        : int.tryParse(rawLevel?.toString() ?? '2') ?? 2;
+    return NewsletterSectionItem(
+      id: json['id'] as String? ?? json['anchor'] as String? ?? '',
+      title: json['title'] as String? ?? json['line'] as String? ?? '',
+      level: level,
+    );
+  }
+}
+
 /// Content loaded for a newsletter edition.
 class NewsletterEdition {
   final String pageTitle;
   final String htmlContent;
   final String? heroImageUrl;
   final List<String> images;
+  final List<NewsletterSectionItem> sections;
   final bool isOfflineCache;
   final DateTime lastFetched;
 
@@ -51,15 +83,37 @@ class NewsletterEdition {
     required this.htmlContent,
     this.heroImageUrl,
     this.images = const [],
+    this.sections = const [],
     this.isOfflineCache = false,
     required this.lastFetched,
   });
+
+  NewsletterEdition copyWith({
+    String? pageTitle,
+    String? htmlContent,
+    String? heroImageUrl,
+    List<String>? images,
+    List<NewsletterSectionItem>? sections,
+    bool? isOfflineCache,
+    DateTime? lastFetched,
+  }) {
+    return NewsletterEdition(
+      pageTitle: pageTitle ?? this.pageTitle,
+      htmlContent: htmlContent ?? this.htmlContent,
+      heroImageUrl: heroImageUrl ?? this.heroImageUrl,
+      images: images ?? this.images,
+      sections: sections ?? this.sections,
+      isOfflineCache: isOfflineCache ?? this.isOfflineCache,
+      lastFetched: lastFetched ?? this.lastFetched,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'pageTitle': pageTitle,
         'htmlContent': htmlContent,
         'heroImageUrl': heroImageUrl,
         'images': images,
+        'sections': sections.map((s) => s.toJson()).toList(),
         'lastFetched': lastFetched.toIso8601String(),
       };
 
@@ -69,6 +123,10 @@ class NewsletterEdition {
       htmlContent: json['htmlContent'] as String? ?? '',
       heroImageUrl: json['heroImageUrl'] as String?,
       images: (json['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      sections: (json['sections'] as List<dynamic>?)
+              ?.map((e) => NewsletterSectionItem.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          const [],
       isOfflineCache: isOfflineCache,
       lastFetched: json['lastFetched'] != null
           ? DateTime.tryParse(json['lastFetched'] as String) ?? DateTime.now()
@@ -106,7 +164,6 @@ class DefaultSharedPreferencesNewsletterCache implements NewsletterCacheDelegate
     } catch (_) {}
   }
 }
-
 
 /// Abstract content delegate conforming to Modular Modules Specification Section 4.3.
 abstract class NewsletterContentDelegate {
