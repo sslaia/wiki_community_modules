@@ -5,7 +5,7 @@ import '../models/course_models.dart';
 /// Normalizes Wikimedia image URLs:
 /// 1. Prepends https: to protocol-relative URLs (//upload...)
 /// 2. Strips query parameters (e.g. ?utm_source=...)
-/// 3. Normalizes thumbnail widths to high-res width (e.g. 1000px)
+/// 3. Normalizes thumbnail widths to high-res width (e.g. 500px)
 String cleanWikimediaImageUrl(String rawSrc, {int defaultWidth = 500}) {
   var src = rawSrc.trim();
   if (src.isEmpty) return '';
@@ -80,6 +80,65 @@ String? extractHeroImageUrl(String htmlContent, List<String> images, {String? do
   return null;
 }
 
+/// Extracts the text from the first <h2> heading in the HTML content.
+String? extractFirstH2Title(String htmlContent) {
+  final h2Regex = RegExp(r"""<h2[^>]*>(.*?)</h2>""", caseSensitive: false, dotAll: true);
+  final match = h2Regex.firstMatch(htmlContent);
+  if (match != null) {
+    final inner = match.group(1)!;
+    // Strip inner tags like <span ...>...</span>
+    final clean = inner.replaceAll(RegExp(r"""<[^>]*>"""), '').trim();
+    if (clean.isNotEmpty) {
+      return clean;
+    }
+  }
+  return null;
+}
+
+/// Removes the first <h2> heading (and its container .lesson-title or .mw-heading if present)
+/// so that the title is only shown in the SliverAppBar and not duplicated in the text.
+String removeFirstH2(String htmlContent) {
+  // 1. If wrapped in .lesson-title container
+  final ltMatch = RegExp(r"""<div[^>]*class=["'][^"']*lesson-title[^"']*["'][^>]*>""", caseSensitive: false).firstMatch(htmlContent);
+  if (ltMatch != null) {
+    final startIdx = ltMatch.start;
+    var depth = 0;
+    var endIdx = -1;
+    final divRegex = RegExp(r"""</?div[^>]*>""", caseSensitive: false);
+    for (final m in divRegex.allMatches(htmlContent.substring(startIdx))) {
+      final tag = m.group(0)!;
+      if (tag.toLowerCase().startsWith('</div')) {
+        depth--;
+        if (depth == 0) {
+          endIdx = startIdx + m.end;
+          break;
+        }
+      } else {
+        depth++;
+      }
+    }
+    if (endIdx != -1) {
+      return htmlContent.substring(0, startIdx) + htmlContent.substring(endIdx);
+    }
+  }
+
+  // 2. Else if wrapped in .mw-heading container
+  final mhMatch = RegExp(
+    r"""<div[^>]*class=["'][^"']*mw-heading[^"']*["'][^>]*>\s*<h2[^>]*>.*?</h2>(?:<span[^>]*class=["']mw-editsection["']>.*?</span>)?\s*</div>""",
+    caseSensitive: false,
+    dotAll: true,
+  ).firstMatch(htmlContent);
+  if (mhMatch != null) {
+    return htmlContent.substring(0, mhMatch.start) + htmlContent.substring(mhMatch.end);
+  }
+
+  // 3. Fallback: replace first <h2>...</h2> directly
+  return htmlContent.replaceFirst(
+    RegExp(r"""<h2[^>]*>.*?</h2>""", caseSensitive: false, dotAll: true),
+    '',
+  );
+}
+
 class WikiCourseService {
   static final CourseCacheDelegate _defaultCache = DefaultSharedPreferencesCourseCache();
 
@@ -120,10 +179,14 @@ class WikiCourseService {
                   .toList() ??
               [];
 
-          final processedHtml = _sanitizeHtml(rawText, config.domain);
+          // Extract course title from first <h2> and remove it from the body HTML
+          final dynamicCourseTitle = extractFirstH2Title(rawText);
+          final htmlWithoutH2 = removeFirstH2(rawText);
+          final processedHtml = _sanitizeHtml(htmlWithoutH2, config.domain);
 
           final result = CoursePageContent(
             pageTitle: parse['title'] as String? ?? config.pageTitle,
+            courseTitle: dynamicCourseTitle,
             htmlContent: processedHtml,
             images: imagesList,
             isOfflineCache: false, // Network succeeded -> fresh online content

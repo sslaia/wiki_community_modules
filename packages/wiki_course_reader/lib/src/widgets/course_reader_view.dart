@@ -12,6 +12,7 @@ class CourseReaderView extends StatefulWidget {
   final bool forceRefresh;
   final void Function(String url)? onLinkTap;
   final void Function(String imageUrl, String? caption)? onImageTap;
+  final void Function(CoursePageContent content)? onLoaded;
   final Widget Function(BuildContext context)? loadingBuilder;
   final Widget Function(BuildContext context, Object error)? errorBuilder;
   final Widget? headerWidget;
@@ -29,6 +30,7 @@ class CourseReaderView extends StatefulWidget {
     this.forceRefresh = false,
     this.onLinkTap,
     this.onImageTap,
+    this.onLoaded,
     this.loadingBuilder,
     this.errorBuilder,
     this.headerWidget,
@@ -69,7 +71,10 @@ class _CourseReaderViewState extends State<CourseReaderView> {
         widget.config,
         forceRefresh: widget.forceRefresh,
         cacheDelegate: widget.cacheDelegate,
-      );
+      ).then((content) {
+        widget.onLoaded?.call(content);
+        return content;
+      });
     });
   }
 
@@ -242,6 +247,10 @@ class _CourseReaderViewState extends State<CourseReaderView> {
             return true;
           },
           customStylesBuilder: (element) {
+            // Suppress lesson-title if present
+            if (element.classes.contains('lesson-title')) {
+              return {'display': 'none'};
+            }
             // 3. Blockquote / Quotation styling matching Village Screen
             if (element.localName == 'blockquote') {
               return {
@@ -274,6 +283,10 @@ class _CourseReaderViewState extends State<CourseReaderView> {
             return null;
           },
           customWidgetBuilder: (element) {
+            // Suppress lesson-title from widget tree
+            if (element.classes.contains('lesson-title')) {
+              return const SizedBox.shrink();
+            }
             // 5. Images with rounded corners and double.infinity width
             if (element.localName == 'img') {
               final rawSrc = element.attributes['src'] ?? '';

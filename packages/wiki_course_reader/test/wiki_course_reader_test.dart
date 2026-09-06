@@ -70,6 +70,16 @@ void main() {
       final fallback = extractHeroImageUrl('<p>No image</p>', ['CourseArt.png']);
       expect(fallback, contains('Special:FilePath/CourseArt.png'));
     });
+    test('extractFirstH2Title and removeFirstH2 work accurately', () {
+      const sampleHtml = '<div class="course-header">HEAD</div><div class="lesson-title"><div class="mw-heading"><h2>Wa\x27omasigu wa\x27omasimö</h2></div></div><blockquote>Text</blockquote>';
+      final title = extractFirstH2Title(sampleHtml);
+      expect(title, equals("Wa'omasigu wa'omasimö"));
+
+      final cleaned = removeFirstH2(sampleHtml);
+      expect(cleaned, isNot(contains('<h2>')));
+      expect(cleaned, isNot(contains('lesson-title')));
+      expect(cleaned, contains('<blockquote>Text</blockquote>'));
+    });
   });
 
   group('CourseReaderScreen widget tests', () {

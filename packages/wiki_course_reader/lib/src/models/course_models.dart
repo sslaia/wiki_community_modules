@@ -37,6 +37,7 @@ class CourseConfig {
 /// Content loaded for a course page.
 class CoursePageContent {
   final String pageTitle;
+  final String? courseTitle;
   final String htmlContent;
   final List<String> images;
   final bool isOfflineCache;
@@ -44,6 +45,7 @@ class CoursePageContent {
 
   const CoursePageContent({
     required this.pageTitle,
+    this.courseTitle,
     required this.htmlContent,
     this.images = const [],
     this.isOfflineCache = false,
@@ -52,6 +54,7 @@ class CoursePageContent {
 
   Map<String, dynamic> toJson() => {
         'pageTitle': pageTitle,
+        'courseTitle': courseTitle,
         'htmlContent': htmlContent,
         'images': images,
         'lastFetched': lastFetched.toIso8601String(),
@@ -63,6 +66,7 @@ class CoursePageContent {
   }) {
     return CoursePageContent(
       pageTitle: json['pageTitle'] as String? ?? '',
+      courseTitle: json['courseTitle'] as String?,
       htmlContent: json['htmlContent'] as String? ?? '',
       images: (json['images'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       isOfflineCache: isOfflineCache,
@@ -74,6 +78,7 @@ class CoursePageContent {
 
   CoursePageContent copyWith({
     String? pageTitle,
+    String? courseTitle,
     String? htmlContent,
     List<String>? images,
     bool? isOfflineCache,
@@ -81,6 +86,7 @@ class CoursePageContent {
   }) {
     return CoursePageContent(
       pageTitle: pageTitle ?? this.pageTitle,
+      courseTitle: courseTitle ?? this.courseTitle,
       htmlContent: htmlContent ?? this.htmlContent,
       images: images ?? this.images,
       isOfflineCache: isOfflineCache ?? this.isOfflineCache,

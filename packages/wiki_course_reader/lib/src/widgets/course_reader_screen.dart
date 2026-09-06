@@ -83,7 +83,7 @@ class _CourseReaderScreenState extends State<CourseReaderScreen> {
   }
 
   void _shareCourse() {
-    final title = widget.title ?? widget.config.pageTitle;
+    final title = _loadedContent?.courseTitle ?? widget.title ?? widget.config.pageTitle;
     final uri = Uri.tryParse(widget.config.pageUrl);
     if (uri != null) {
       SharePlus.instance.share(
@@ -130,7 +130,7 @@ class _CourseReaderScreenState extends State<CourseReaderScreen> {
 
   Widget _buildSliverAppBar(BuildContext context, Color accent) {
     final theme = Theme.of(context);
-    final displayTitle = widget.title ?? widget.config.pageTitle;
+    final displayTitle = _loadedContent?.courseTitle ?? widget.title ?? widget.config.pageTitle;
     final heroImage = _resolveHeroImageUrl();
 
     return SliverAppBar(
@@ -327,6 +327,11 @@ class _CourseReaderScreenState extends State<CourseReaderScreen> {
       floatingActionButton: _buildFloatingActionBar(context, accent),
       body: CourseReaderView(
         config: widget.config,
+        onLoaded: (content) {
+          if (mounted) {
+            setState(() => _loadedContent = content);
+          }
+        },
         cacheDelegate: widget.cacheDelegate,
         forceRefresh: _forceRefresh,
         onLinkTap: widget.onLinkTap,
