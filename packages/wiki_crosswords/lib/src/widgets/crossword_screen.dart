@@ -8,6 +8,7 @@ import 'crossword_game_view.dart';
 /// - Reveal system, clue ribbon, and native text input.
 class CrosswordScreen extends StatefulWidget {
   final String title;
+  final TextStyle? titleStyle;
   final CrosswordDataSource dataSource;
   final String languageCode;
   final int? initialPuzzleId;
@@ -23,6 +24,7 @@ class CrosswordScreen extends StatefulWidget {
   const CrosswordScreen({
     super.key,
     required this.title,
+    this.titleStyle,
     required this.dataSource,
     this.languageCode = 'en',
     this.initialPuzzleId,
@@ -73,10 +75,11 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
             const SizedBox(width: 8),
             Text(
               widget.title,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
+              style: widget.titleStyle ??
+                  const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
             ),
           ],
         ),
