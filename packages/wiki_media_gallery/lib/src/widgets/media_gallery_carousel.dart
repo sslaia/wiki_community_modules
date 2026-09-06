@@ -412,11 +412,15 @@ class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            'Tap to view fullscreen',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.6),
-                              fontSize: 12,
+                          Flexible(
+                            child: Text(
+                              'Tap to view fullscreen',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.6),
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                           if (widget.onShareItem != null)
