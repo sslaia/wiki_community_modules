@@ -37,6 +37,7 @@ class CrosswordGameController extends ChangeNotifier {
   void playPuzzle(int puzzleId) => _state?._playPuzzle(puzzleId);
   void toggleFavorite() => _state?._toggleFavorite();
   Future<void> shareScore() => _state?._captureAndShare() ?? Future.value();
+  void notifyStateChanged() => notifyListeners();
 }
 
 class CrosswordGameView extends StatefulWidget {
@@ -137,7 +138,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
           _isLoading = false;
           _errorMessage = _label('crossword_no', 'No crossword puzzles found.');
         });
-        widget.controller?.notifyListeners();
+        widget.controller?.notifyStateChanged();
         return;
       }
 
@@ -158,13 +159,13 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
       setState(() {
         _isLoading = false;
       });
-      widget.controller?.notifyListeners();
+      widget.controller?.notifyStateChanged();
     } catch (e) {
       setState(() {
         _isLoading = false;
         _errorMessage = e.toString();
       });
-      widget.controller?.notifyListeners();
+      widget.controller?.notifyStateChanged();
     }
   }
 
@@ -216,7 +217,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
     setState(() {
       _favoritePuzzles = favs;
     });
-    widget.controller?.notifyListeners();
+    widget.controller?.notifyStateChanged();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
@@ -361,7 +362,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
     _selectDailyPuzzle();
     await _checkAndResetDailyPuzzleIfNeeded();
     await _loadUserAnswers();
-    widget.controller?.notifyListeners();
+    widget.controller?.notifyStateChanged();
   }
 
   Future<void> _playPuzzle(int puzzleId) async {
@@ -375,7 +376,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
       _isTemporarilyRevealed = false;
     });
     await _loadUserAnswers();
-    widget.controller?.notifyListeners();
+    widget.controller?.notifyStateChanged();
   }
 
   Future<void> _captureAndShare() async {
@@ -496,7 +497,7 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
                   setState(() {
                     _currentIndex = newSelection.first;
                   });
-                  widget.controller?.notifyListeners();
+                  widget.controller?.notifyStateChanged();
                 },
               ),
             ),
@@ -664,13 +665,16 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
                           color: primary,
                         ),
                         const SizedBox(width: 8),
-                        Text(
-                          isDaily
-                              ? _label('crossword_daily', 'Daily Crossword')
-                              : '${_label('crosswords', 'Crossword')} #${_currentPuzzle!.puzzleId}',
-                          style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: primary,
+                        Flexible(
+                          child: Text(
+                            isDaily
+                                ? _label('crossword_daily', 'Daily Crossword')
+                                : '${_label('crosswords', 'Crossword')} #${_currentPuzzle!.puzzleId}',
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: primary,
+                            ),
                           ),
                         ),
                       ],
@@ -715,11 +719,14 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
                                     color: primary,
                                   ),
                                   const SizedBox(width: 8),
-                                  Text(
-                                    _label('crossword_bonus', 'Bonus'),
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: primary,
+                                  Flexible(
+                                    child: Text(
+                                      _label('crossword_bonus', 'Bonus'),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: primary,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -819,11 +826,14 @@ class _CrosswordGameViewState extends State<CrosswordGameView> {
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
                                 const SizedBox(width: 8),
-                                Text(
-                                  _label('crossword_notes', 'Note'),
-                                  style: theme.textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: theme.colorScheme.onSurfaceVariant,
+                                Flexible(
+                                  child: Text(
+                                    _label('crossword_notes', 'Note'),
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ),
                               ],

@@ -20,6 +20,7 @@ class CrosswordScreen extends StatefulWidget {
   final Widget? leading;
   final List<Widget>? extraActions;
   final Widget? drawer;
+  final bool? centerTitle;
 
   const CrosswordScreen({
     super.key,
@@ -36,6 +37,7 @@ class CrosswordScreen extends StatefulWidget {
     this.leading,
     this.extraActions,
     this.drawer,
+    this.centerTitle,
   });
 
   @override
@@ -67,19 +69,23 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
       drawer: widget.drawer,
       appBar: AppBar(
         leading: widget.leading,
-        centerTitle: true,
+        centerTitle: widget.centerTitle ?? false,
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.grid_on_rounded, color: primary),
             const SizedBox(width: 8),
-            Text(
-              widget.title,
-              style: widget.titleStyle ??
-                  const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
+            Flexible(
+              child: Text(
+                widget.title,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: widget.titleStyle ??
+                    const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.5,
+                    ),
+              ),
             ),
           ],
         ),

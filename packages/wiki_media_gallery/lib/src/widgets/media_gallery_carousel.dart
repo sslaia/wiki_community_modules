@@ -37,20 +37,20 @@ class MediaGalleryCarousel extends StatefulWidget {
 }
 
 class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
-  late PageController _pageController;
+  late CarouselController _carouselController;
   late String? _selectedCategory;
   GalleryDisplayMode _displayMode = GalleryDisplayMode.carousel;
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController();
+    _carouselController = CarouselController();
     _selectedCategory = widget.initialCategory;
   }
 
   @override
   void dispose() {
-    _pageController.dispose();
+    _carouselController.dispose();
     super.dispose();
   }
 
@@ -251,173 +251,187 @@ class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
   ) {
     final theme = Theme.of(context);
 
-    return PageView.builder(
-      controller: _pageController,
-      scrollDirection: Axis.vertical,
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        final imageUrl = item.thumbnailUrl ?? item.imageUrl;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double itemExtent = (constraints.maxHeight * 0.85).clamp(280.0, 750.0);
+        final double shrinkExtent = (constraints.maxHeight * 0.22).clamp(120.0, 200.0);
 
-        return GestureDetector(
-          onTap: () => _openLightbox(item),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // Background Image
-              if (imageUrl.isNotEmpty)
-                CachedNetworkImage(
-                  imageUrl: imageUrl,
-                  httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage; contact@example.com)'},
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.black12,
-                    child: Center(
-                      child: CircularProgressIndicator(color: primary),
+        return CarouselView(
+          controller: _carouselController,
+          scrollDirection: Axis.vertical,
+          itemExtent: itemExtent,
+          shrinkExtent: shrinkExtent,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          elevation: 3,
+          onTap: (index) => _openLightbox(items[index]),
+          children: items.asMap().entries.map((entry) {
+            final index = entry.key;
+            final item = entry.value;
+            final imageUrl = item.thumbnailUrl ?? item.imageUrl;
+
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                // Background Image
+                if (imageUrl.isNotEmpty)
+                  CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage; contact@example.com)'},
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: Colors.black12,
+                      child: Center(
+                        child: CircularProgressIndicator(color: primary),
+                      ),
                     ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
+                    errorWidget: (context, url, error) => Container(
+                      color: theme.colorScheme.surfaceContainerHighest,
+                      child: const Center(
+                        child: Icon(Icons.broken_image_rounded, size: 48, color: Colors.grey),
+                      ),
+                    ),
+                  )
+                else
+                  Container(
                     color: theme.colorScheme.surfaceContainerHighest,
                     child: const Center(
-                      child: Icon(Icons.broken_image_rounded, size: 48, color: Colors.grey),
+                      child: Icon(Icons.image_not_supported_rounded, size: 48, color: Colors.grey),
                     ),
                   ),
-                )
-              else
+
+                // Gradient Scrim for readable captions
                 Container(
-                  color: theme.colorScheme.surfaceContainerHighest,
-                  child: const Center(
-                    child: Icon(Icons.image_not_supported_rounded, size: 48, color: Colors.grey),
-                  ),
-                ),
-
-              // Gradient Scrim for readable captions
-              Container(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    stops: [0.0, 0.4, 0.7, 1.0],
-                    colors: [
-                      Colors.black38,
-                      Colors.transparent,
-                      Colors.black54,
-                      Colors.black87,
-                    ],
-                  ),
-                ),
-              ),
-
-              // Top Indicator badge (index / total)
-              Positioned(
-                top: 16,
-                right: 16,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.white24, width: 0.8),
-                  ),
-                  child: Text(
-                    '${index + 1} / ${items.length}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      stops: [0.0, 0.4, 0.7, 1.0],
+                      colors: [
+                        Colors.black38,
+                        Colors.transparent,
+                        Colors.black54,
+                        Colors.black87,
+                      ],
                     ),
                   ),
                 ),
-              ),
 
-              // Bottom Caption & Cultural Metadata
-              Positioned(
-                bottom: 24,
-                left: 16,
-                right: 16,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Category Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(6),
+                // Top Indicator badge (index / total)
+                Positioned(
+                  top: 16,
+                  right: 16,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.white24, width: 0.8),
+                    ),
+                    child: Text(
+                      '${index + 1} / ${items.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: Text(
-                        _getCategoryLabel(item.category).toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
-                          letterSpacing: 1.0,
+                    ),
+                  ),
+                ),
+
+                // Bottom Caption & Cultural Metadata
+                Positioned(
+                  bottom: 20,
+                  left: 16,
+                  right: 16,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Category Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          _getCategoryLabel(item.category).toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.8,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
+                      const SizedBox(height: 8),
 
-                    // Title
-                    Text(
-                      item.title,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        shadows: const [
-                          Shadow(
-                            blurRadius: 6,
-                            color: Colors.black,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Description
-                    if (item.description != null && item.description!.isNotEmpty) ...[
-                      const SizedBox(height: 6),
+                      // Title
                       Text(
-                        item.description!,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withValues(alpha: 0.85),
-                          height: 1.3,
+                        item.title,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
                           shadows: const [
                             Shadow(
                               blurRadius: 4,
                               color: Colors.black,
-                              offset: Offset(0, 1),
+                              offset: Offset(1, 1),
                             ),
                           ],
                         ),
-                        maxLines: 3,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                    ],
 
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
+                      // Description
+                      if (item.description != null && item.description!.isNotEmpty) ...[
+                        const SizedBox(height: 6),
                         Text(
-                          'Tap to view fullscreen',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 12,
+                          item.description!,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.85),
+                            height: 1.3,
+                            shadows: const [
+                              Shadow(
+                                blurRadius: 4,
+                                color: Colors.black,
+                                offset: Offset(0, 1),
+                              ),
+                            ],
                           ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        if (widget.onShareItem != null)
-                          IconButton(
-                            icon: const Icon(Icons.share_rounded, color: Colors.white, size: 20),
-                            onPressed: () => widget.onShareItem!(item),
-                          ),
                       ],
-                    ),
-                  ],
+
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Tap to view fullscreen',
+                            style: TextStyle(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              fontSize: 12,
+                            ),
+                          ),
+                          if (widget.onShareItem != null)
+                            IconButton(
+                              icon: const Icon(Icons.share_rounded, color: Colors.white, size: 20),
+                              onPressed: () => widget.onShareItem!(item),
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          }).toList(),
         );
       },
     );

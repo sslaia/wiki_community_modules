@@ -46,7 +46,7 @@ void main() {
       );
       expect(
         item.thumbnailUrl,
-        "https://commons.wikimedia.org/wiki/Special:FilePath/Motif_Ni'ohulayo.jpg?width=900",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Motif_Ni'ohulayo.jpg?width=500",
       );
       expect(item.category, 'arts');
     });
