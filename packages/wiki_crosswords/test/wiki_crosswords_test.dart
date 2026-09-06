@@ -27,7 +27,7 @@ void main() {
       expect(word.y, 5);
       expect(word.direction, 'across');
       expect(word.containsCell(2, 5), isTrue);
-      expect(word.containsCell(6, 5), isTrue); // length 5: 2, 3, 4, 5, 6
+      expect(word.containsCell(6, 5), isTrue);
       expect(word.containsCell(7, 5), isFalse);
       expect(word.cellIndex(2, 5), 0);
       expect(word.cellIndex(4, 5), 2);
@@ -91,7 +91,7 @@ void main() {
       ],
     );
 
-    testWidgets('renders puzzle, clue ribbon, and custom keypad', (tester) async {
+    testWidgets('renders segmented navigation tabs and daily crossword grid', (tester) async {
       final dataSource = MemoryCrosswordDataSource([samplePuzzle]);
 
       await tester.pumpWidget(
@@ -101,12 +101,12 @@ void main() {
               dataSource: dataSource,
               languageCode: 'nia',
               customLabels: const {
-                'crossword_title': 'Dahö-Dahö',
+                'crossword_daily': 'Dahö-Dahö',
+                'crossword_favorites': 'Somasido',
+                'crossword_scoreboard': 'Papan Skor',
                 'across': 'Misa',
                 'down': 'Mitou',
-                'check': 'Faigi',
               },
-              extraKeypadLetters: const ['Ö', 'Ŵ'],
             ),
           ),
         ),
@@ -114,18 +114,16 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Title
-      expect(find.text('Dahö-Dahö #1'), findsOneWidget);
-      // Clue
+      // Segmented Tabs
+      expect(find.text('Dahö-Dahö'), findsWidgets);
+      expect(find.text('Somasido'), findsOneWidget);
+      expect(find.text('Papan Skor'), findsOneWidget);
+
+      // Clue card
       expect(find.text('Island in North Sumatra'), findsOneWidget);
-      // Extra keypad characters
-      expect(find.text('Ö'), findsOneWidget);
-      expect(find.text('Ŵ'), findsOneWidget);
-      // Action buttons
-      expect(find.text('Faigi'), findsOneWidget);
     });
 
-    testWidgets('tapping a cell and pressing keypad enters letter', (tester) async {
+    testWidgets('tapping cell renders TextField and typing sets answer', (tester) async {
       final dataSource = MemoryCrosswordDataSource([samplePuzzle]);
 
       await tester.pumpWidget(
@@ -134,7 +132,6 @@ void main() {
             body: CrosswordGameView(
               dataSource: dataSource,
               languageCode: 'nia',
-              extraKeypadLetters: const ['Ö', 'Ŵ'],
             ),
           ),
         ),
@@ -142,18 +139,52 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Tap first cell (top-left, cell #1)
+      // Tap top-left playable cell (starts at 0,0 where word starts)
       final cellOne = find.text('1');
       expect(cellOne, findsWidgets);
       await tester.tap(cellOne.first);
       await tester.pumpAndSettle();
 
-      // Tap letter 'Ö' on the custom keypad
-      await tester.tap(find.text('Ö'));
+      // A TextField should now be focused in the selected cell
+      expect(find.byType(TextField), findsOneWidget);
+
+      // Enter character
+      await tester.enterText(find.byType(TextField), 'N');
       await tester.pumpAndSettle();
 
-      // The entered letter should now appear in the cell
-      expect(find.text('Ö'), findsWidgets);
+      // Cell text should display 'N'
+      expect(find.text('N'), findsWidgets);
+    });
+
+    testWidgets('switching to Scoreboard tab renders ScoreboardWidget', (tester) async {
+      final dataSource = MemoryCrosswordDataSource([samplePuzzle]);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CrosswordGameView(
+              dataSource: dataSource,
+              languageCode: 'en',
+              customLabels: const {
+                'crossword_daily': 'Daily',
+                'crossword_favorites': 'Favorites',
+                'crossword_scoreboard': 'Scoreboard',
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Tap Scoreboard tab
+      await tester.tap(find.text('Scoreboard'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ScoreboardWidget), findsOneWidget);
+      expect(find.text('Weekly'), findsOneWidget);
+      expect(find.text('Monthly'), findsOneWidget);
+      expect(find.text('Yearly'), findsOneWidget);
     });
   });
 }
