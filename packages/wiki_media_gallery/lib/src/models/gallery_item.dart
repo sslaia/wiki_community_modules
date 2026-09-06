@@ -24,9 +24,12 @@ class GalleryItem {
 
   static String _cleanFileName(dynamic fileName) {
     if (fileName == null) return '';
-    final s = fileName.toString();
-    final stripped = s.startsWith('File:') ? s.substring(5) : s;
-    return Uri.encodeComponent(stripped);
+    var s = fileName.toString().trim();
+    if (s.startsWith('File:')) s = s.substring(5);
+    try {
+      s = Uri.decodeFull(s);
+    } catch (_) {}
+    return Uri.encodeComponent(s);
   }
 
   factory GalleryItem.fromJson(Map<String, dynamic> json) {
@@ -35,7 +38,7 @@ class GalleryItem {
         ? 'https://commons.wikimedia.org/wiki/Special:FilePath/${_cleanFileName(fileName)}'
         : '';
     final defaultThumb = fileName != null
-        ? 'https://commons.wikimedia.org/wiki/Special:FilePath/${_cleanFileName(fileName)}?width=900'
+        ? 'https://commons.wikimedia.org/wiki/Special:FilePath/${_cleanFileName(fileName)}?width=500'
         : null;
 
     return GalleryItem(

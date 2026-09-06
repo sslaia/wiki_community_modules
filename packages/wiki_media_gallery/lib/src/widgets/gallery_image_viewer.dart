@@ -33,6 +33,7 @@ class GalleryImageViewer extends StatelessWidget {
               child: targetUrl.isNotEmpty
                   ? CachedNetworkImage(
                       imageUrl: targetUrl,
+                      httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage; contact@example.com)'},
                       fit: BoxFit.contain,
                       placeholder: (context, url) => const Center(
                         child: CircularProgressIndicator(color: Colors.white70),

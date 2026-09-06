@@ -268,6 +268,7 @@ class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
               if (imageUrl.isNotEmpty)
                 CachedNetworkImage(
                   imageUrl: imageUrl,
+                  httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage; contact@example.com)'},
                   fit: BoxFit.cover,
                   placeholder: (context, url) => Container(
                     color: Colors.black12,
@@ -465,6 +466,7 @@ class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
                       if (imageUrl.isNotEmpty)
                         CachedNetworkImage(
                           imageUrl: imageUrl,
+                          httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage; contact@example.com)'},
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
                             color: theme.colorScheme.surfaceContainerHighest,
