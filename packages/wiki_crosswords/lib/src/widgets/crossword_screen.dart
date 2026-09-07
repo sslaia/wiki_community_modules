@@ -81,7 +81,9 @@ class _CrosswordScreenState extends State<CrosswordScreen> {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 style: widget.titleStyle ??
-                    const TextStyle(
+                    theme.appBarTheme.titleTextStyle ??
+                    TextStyle(
+                      color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.5,
                     ),
