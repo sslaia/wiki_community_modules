@@ -256,20 +256,20 @@ class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
         final double itemExtent = (constraints.maxHeight * 0.85).clamp(280.0, 750.0);
         final double shrinkExtent = (constraints.maxHeight * 0.22).clamp(120.0, 200.0);
 
-        return CarouselView(
+        return CarouselView.builder(
           controller: _carouselController,
           scrollDirection: Axis.vertical,
           itemExtent: itemExtent,
           shrinkExtent: shrinkExtent,
+          itemCount: items.length,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
           elevation: 3,
           onTap: (index) => _openLightbox(items[index]),
-          children: items.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
+          itemBuilder: (context, index) {
+            final item = items[index];
             final imageUrl = item.thumbnailUrl ?? item.imageUrl;
 
             return Stack(
@@ -279,7 +279,7 @@ class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
                 if (imageUrl.isNotEmpty)
                   CachedNetworkImage(
                     imageUrl: imageUrl,
-                    httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage; contact@example.com)'},
+                    httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage)'},
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       color: Colors.black12,
@@ -435,7 +435,7 @@ class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
                 ),
               ],
             );
-          }).toList(),
+          },
         );
       },
     );
@@ -484,7 +484,7 @@ class _MediaGalleryCarouselState extends State<MediaGalleryCarousel> {
                       if (imageUrl.isNotEmpty)
                         CachedNetworkImage(
                           imageUrl: imageUrl,
-                          httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage; contact@example.com)'},
+                          httpHeaders: const {'User-Agent': 'NiasHeritage/1.0 (https://github.com/sslaia/niasheritage)'},
                           fit: BoxFit.cover,
                           placeholder: (context, url) => Container(
                             color: theme.colorScheme.surfaceContainerHighest,
